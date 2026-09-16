@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 
-// Forces Next.js to render this page dynamically at runtime (prevents build-time pre-rendering errors)
+// Forces Next.js to render this page dynamically at runtime
 export const dynamic = 'force-dynamic';
 
 interface CreatorPageProps {
@@ -13,11 +13,15 @@ interface CreatorPageProps {
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { slug } = params;
 
-  // Initialize Supabase client
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Initialize Supabase client INSIDE the component function
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    notFound();
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   // Fetch the creator profile based on the slug/handle
   const { data: creator, error } = await supabase
@@ -35,8 +39,6 @@ export default async function CreatorPage({ params }: CreatorPageProps) {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">{creator.full_name || creator.handle}&apos;s Store</h1>
         <p className="text-gray-400 mb-6">Official storefront and digital products powered by Arovaq.</p>
-        
-        {/* Your storefront catalog and product display components go here */}
       </div>
     </main>
   );
