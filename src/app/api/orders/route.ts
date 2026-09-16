@@ -1,44 +1,41 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request) {
+function getSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+export async function GET(request: Request) {
   try {
-    const body = await req.json();
-    const {
-      product_id,
-      customer_email,
-      amount,
-      payment_rail, // 'busha' or 'solana_direct'
-      tx_signature,
-      referral_channel,
-    } = body;
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
 
-    const { data, error } = await supabase
-      .from("orders")
-      .insert([
-        {
-          product_id,
-          customer_email: customer_email || "guest@arovaq.com",
-          amount,
-          payment_rail,
-          payment_status: payment_rail === "solana_direct" ? "completed" : "pending",
-          tx_signature,
-          referral_channel,
-        },
-      ])
-      .select()
-      .single();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, order: data });
+    return NextResponse.json({ orders: data });
   } catch (err: any) {
-    console.error("Order logging error:", err);
-    return NextResponse.json({ error: err.message || "Failed to log order" }, { status: 500 });
+    return NextResponse.json({ error: 'Internal gateway error', details: err?.message }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = getSupabase();
+    const body = await request.json();
+    const { data, error } = await supabase.from('orders').insert([body]).select();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, order: data[0] });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Internal gateway error', details: err?.message }, { status: 500 });
   }
 }
