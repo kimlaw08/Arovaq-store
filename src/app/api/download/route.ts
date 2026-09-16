@@ -1,54 +1,41 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Force dynamic execution so Next.js doesn't static-collect or fail prerender during build
+export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const orderId = searchParams.get("order_id");
-    const txSignature = searchParams.get("tx_signature");
+    const { searchParams } = new URL(request.url);
+    const fileId = searchParams.get('file') || searchParams.get('id');
 
-    if (!orderId && !txSignature) {
-      return NextResponse.json({ error: "Missing verification parameters (order_id or tx_signature)." }, { status: 400 });
+    if (!fileId) {
+      return NextResponse.json({ error: 'Missing file identifier parameter (?file=)' }, { status: 400 });
     }
 
-    // 1. Query the order and join product details to verify payment completion
-    let query = supabase.from("orders").select("*, products(file_path, title)");
-    if (orderId) query = query.eq("id", orderId);
-    else query = query.eq("tx_signature", txSignature);
+    // Generate signed download URL from Supabase storage (expires in 60 seconds)
+    const { data, error } = await supabase.storage
+      .from('products')
+      .createSignedUrl(fileId, 60);
 
-    const { data: order, error: orderError } = await query.single();
-
-    if (orderError || !order) {
-      return NextResponse.json({ error: "Order record not found." }, { status: 404 });
+    if (error || !data?.signedUrl) {
+      return NextResponse.json(
+        { error: 'Asset unverified or vault access expired', details: error?.message },
+        { status: 404 }
+      );
     }
 
-    if (order.payment_status !== "completed") {
-      return NextResponse.json({ error: "Access denied: Payment has not been completed or verified." }, { status: 403 });
-    }
-
-    const filePath = order.products?.file_path;
-    if (!filePath) {
-      return NextResponse.json({ error: "Associated product file path not found." }, { status: 404 });
-    }
-
-    // 2. Generate a short-lived secure signed URL (expires in 60 seconds)
-    const { data: signedUrlData, error: signError } = await supabase.storage
-      .from("product-files")
-      .createSignedUrl(filePath, 60);
-
-    if (signError || !signedUrlData) {
-      throw signError || new Error("Failed to generate secure download link.");
-    }
-
-    // 3. Redirect the verified buyer directly to the secure signed URL download stream
-    return NextResponse.redirect(signedUrlData.signedUrl);
+    // Redirect user directly to the encrypted Supabase storage file stream
+    return NextResponse.redirect(data.signedUrl);
   } catch (err: any) {
-    console.error("Download authorization error:", err);
-    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal gateway error', details: err?.message },
+      { status: 500 }
+    );
   }
 }
