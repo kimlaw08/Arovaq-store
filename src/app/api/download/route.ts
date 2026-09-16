@@ -1,40 +1,40 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Force dynamic execution so Next.js doesn't static-collect or fail prerender during build
+// Forces Next.js to render this route dynamically at runtime (prevents static build errors)
 export const dynamic = 'force-dynamic';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const fileId = searchParams.get('file') || searchParams.get('id');
+    const fileKey = searchParams.get('file');
 
-    if (!fileId) {
-      return NextResponse.json({ error: 'Missing file identifier parameter (?file=)' }, { status: 400 });
+    if (!fileKey) {
+      return NextResponse.json({ error: 'File identifier missing' }, { status: 400 });
     }
 
-    // Generate signed download URL from Supabase storage (expires in 60 seconds)
+    // Initialize Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    // Generate a secure signed URL or fetch asset data from Supabase Storage
     const { data, error } = await supabase.storage
-      .from('products')
-      .createSignedUrl(fileId, 60);
+      .from('digital-products')
+      .createSignedUrl(fileKey, 60); // Link expires in 60 seconds
 
-    if (error || !data?.signedUrl) {
-      return NextResponse.json(
-        { error: 'Asset unverified or vault access expired', details: error?.message },
-        { status: 404 }
-      );
+    if (error || !data) {
+      throw new Error(error?.message || 'Failed to generate download link');
     }
 
-    // Redirect user directly to the encrypted Supabase storage file stream
+    // Redirect the user securely to the temporary signed file download URL
     return NextResponse.redirect(data.signedUrl);
+
   } catch (err: any) {
+    console.error('Download error:', err);
     return NextResponse.json(
-      { error: 'Internal gateway error', details: err?.message },
+      { error: err.message || 'Internal server error during download' },
       { status: 500 }
     );
   }
