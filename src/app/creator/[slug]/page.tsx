@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 
-// Forces Next.js to render this page dynamically at runtime
 export const dynamic = 'force-dynamic';
 
 interface CreatorPageProps {
@@ -13,7 +12,7 @@ interface CreatorPageProps {
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { slug } = params;
 
-  // Initialize Supabase client INSIDE the component function
+  // Initialize Supabase client INSIDE the component function at runtime
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
