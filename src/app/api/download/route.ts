@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Generate a secure signed URL or fetch asset data from Supabase Storage
+    // Generate a secure signed URL from Supabase Storage
     const { data, error } = await supabase.storage
       .from('digital-products')
       .createSignedUrl(fileKey, 60); // Link expires in 60 seconds
