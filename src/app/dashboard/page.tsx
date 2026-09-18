@@ -11,7 +11,8 @@ export default function AdminDashboard() {
   const [title, setTitle] = useState('');
   const [deliveryType, setDeliveryType] = useState<'link' | 'upload'>('link');
   const [productUrl, setProductUrl] = useState('');
-  const [coverImage, setCoverImage] = useState('');
+  const [productFile, setProductFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('KES');
   const [handle, setHandle] = useState('lawi');
@@ -27,6 +28,38 @@ export default function AdminDashboard() {
     setCreatedProduct(null);
 
     try {
+      let finalProductUrl = productUrl;
+      let finalCoverUrl = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=600&auto=format&fit=crop';
+
+      // 1. Upload Product File if Direct Upload is selected
+      if (deliveryType === 'upload' && productFile) {
+        const fileExt = productFile.name.split('.').pop();
+        const fileName = `product-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(fileName, productFile);
+
+        if (uploadError) throw new Error('Product upload failed: ' + uploadError.message);
+        
+        const { data: pubData } = supabase.storage.from('products').getPublicUrl(fileName);
+        finalProductUrl = pubData.publicUrl;
+      }
+
+      // 2. Upload Cover Image File if provided
+      if (coverFile) {
+        const fileExt = coverFile.name.split('.').pop();
+        const fileName = `cover-${Date.now()}.${fileExt}`;
+        const { error: coverError } = await supabase.storage
+          .from('products')
+          .upload(fileName, coverFile);
+
+        if (coverError) throw new Error('Cover image upload failed: ' + coverError.message);
+
+        const { data: coverPubData } = supabase.storage.from('products').getPublicUrl(fileName);
+        finalCoverUrl = coverPubData.publicUrl;
+      }
+
+      // 3. Insert into Products table
       const { data, error: insertError } = await supabase
         .from('products')
         .insert([
@@ -37,8 +70,8 @@ export default function AdminDashboard() {
             price: parseFloat(price),
             currency,
             delivery_type: deliveryType,
-            product_url: deliveryType === 'link' ? productUrl : null,
-            cover_image: coverImage || 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=600&auto=format&fit=crop',
+            product_url: finalProductUrl,
+            cover_image: finalCoverUrl,
             commission_split: commission,
           }
         ])
@@ -50,7 +83,8 @@ export default function AdminDashboard() {
       setCreatedProduct(data);
       setTitle('');
       setProductUrl('');
-      setCoverImage('');
+      setProductFile(null);
+      setCoverFile(null);
       setPrice('');
       setDescription('');
     } catch (err: any) {
@@ -155,14 +189,14 @@ export default function AdminDashboard() {
               />
             </div>
 
+            {/* COVER IMAGE UPLOAD */}
             <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Cover Image URL (Optional)</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Product Cover Image (Upload File)</label>
               <input 
-                type="text" 
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://images.unsplash.com/... or leave blank for default Web3 art" 
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
+                type="file" 
+                accept="image/*"
+                onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 text-sm cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white"
               />
             </div>
 
@@ -200,6 +234,7 @@ export default function AdminDashboard() {
                 <input 
                   type="file" 
                   required
+                  onChange={(e) => setProductFile(e.target.files?.[0] || null)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 text-sm cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white"
                 />
               )}
@@ -251,7 +286,7 @@ export default function AdminDashboard() {
               >
                 <option value="2% - Starter Partner">2% - Starter Partner</option>
                 <option value="10% - Standard Partner">10% - Standard Partner</option>
-                <option value="20% - Pro Partner">20% - Pro Partner</option>
+                <option value="25% - Pro Partner">25% - Pro Partner</option>
                 <option value="40% - Growth Partner">40% - Growth Partner</option>
                 <option value="50% - Master Partner">50% - Master Partner</option>
               </select>
@@ -274,7 +309,7 @@ export default function AdminDashboard() {
               disabled={publishing}
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-3.5 px-6 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
             >
-              {publishing ? 'Publishing Asset...' : 'Publish Verified Product'}
+              {publishing ? 'Publishing Asset & Uploading Files...' : 'Publish Verified Product'}
             </button>
           </form>
         </div>
