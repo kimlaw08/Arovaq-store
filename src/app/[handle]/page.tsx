@@ -14,13 +14,12 @@ export default async function CreatorShelfPage({ params }: PageProps) {
   const resolvedParams = await params;
   const handle = resolvedParams.handle?.toLowerCase() || '';
 
-  // Fetch products for this handle
-  const { data: products, error } = await supabase
+  // Fetch all products to inspect database contents
+  const { data: allProducts, error } = await supabase
     .from('products')
-    .select('*')
-    .eq('handle', handle);
+    .select('*');
 
-  const formattedHandle = handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : '';
+  const products = allProducts?.filter(p => p.handle?.toLowerCase() === handle) || [];
 
   return (
     <main className="min-h-screen bg-[#0b0f19] text-slate-100 p-6 md:p-12 font-mono">
@@ -32,26 +31,38 @@ export default async function CreatorShelfPage({ params }: PageProps) {
             VERIFIED CREATOR SHELF
           </span>
           <h1 className="text-3xl font-bold text-white pt-2">
-            {formattedHandle}
+            {handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : ''}
           </h1>
           <p className="text-xs text-slate-400">
-            @{handle} — Explore verified digital assets and Web3 tools.
+            URL Handle: &quot;{handle}&quot; | Total rows in DB: {allProducts?.length || 0}
           </p>
         </div>
 
-        {/* DEBUG ERROR BOX */}
         {error && (
-          <div className="bg-red-950/50 border border-red-500/50 text-red-400 text-xs p-4 rounded-xl space-y-1">
-            <p className="font-bold">Supabase Query Error:</p>
-            <p>{error.message}</p>
+          <div className="bg-red-950/50 border border-red-500/50 text-red-400 text-xs p-4 rounded-xl">
+            Database Error: {error.message}
           </div>
         )}
 
+        {/* DIAGNOSTIC PANEL */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-xs space-y-2 text-slate-300">
+          <p className="font-bold text-emerald-400">Database Diagnostic Inspector:</p>
+          {allProducts && allProducts.length > 0 ? (
+            allProducts.map((p, idx) => (
+              <div key={idx} className="border-t border-slate-800 pt-2 space-y-1">
+                <p>• Title: <span className="text-white font-bold">{p.title}</span></p>
+                <p>• Stored Handle: <span className="text-yellow-400 font-bold">&quot;{p.handle}&quot;</span></p>
+              </div>
+            ))
+          ) : (
+            <p className="text-red-400 font-bold">The `products` table returned 0 rows! The publishing form did not successfully write to Supabase.</p>
+          )}
+        </div>
+
         {/* PRODUCTS LIST */}
-        {!products || products.length === 0 ? (
+        {products.length === 0 ? (
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
-            <p className="text-sm text-slate-400">No digital assets listed on this shelf yet.</p>
-            <p className="text-xs text-slate-600">Queried handle in database: &quot;{handle}&quot;</p>
+            <p className="text-sm text-slate-400">No products matched handle &quot;{handle}&quot;.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -86,7 +97,6 @@ export default async function CreatorShelfPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                {/* CHECKOUT SECTION */}
                 <div className="pt-4 border-t border-slate-800 space-y-4">
                   <a 
                     href={product.product_url} 
