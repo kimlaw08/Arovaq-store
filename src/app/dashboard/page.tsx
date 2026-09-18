@@ -13,7 +13,7 @@ export default function CreatorDashboard() {
   const [price, setPrice] = useState('1200');
   const [currency, setCurrency] = useState('KES');
   const [handle, setHandle] = useState('lawi');
-  const [affiliateSplit, setAffiliateSplit] = useState('40% - Growth Partner');
+  const [affiliateSplit, setAffiliateSplit] = useState('50% - Elite Partner');
   
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [assetFile, setAssetFile] = useState<File | null>(null);
@@ -30,7 +30,7 @@ export default function CreatorDashboard() {
       let coverImageUrl = '';
       let productUrl = '';
 
-      // 1. Bulletproof Cover Upload (Timestamp safe)
+      // 1. Bulletproof Cover Upload
       if (coverFile) {
         const fileExt = coverFile.name.split('.').pop() || 'jpg';
         const fileName = `cover_${Date.now()}.${fileExt}`;
@@ -48,7 +48,7 @@ export default function CreatorDashboard() {
         coverImageUrl = publicUrlData.publicUrl;
       }
 
-      // 2. Bulletproof Asset Upload (Timestamp safe)
+      // 2. Bulletproof Asset Upload
       if (assetFile) {
         const fileExt = assetFile.name.split('.').pop() || 'pdf';
         const assetName = `asset_${Date.now()}.${fileExt}`;
@@ -66,7 +66,7 @@ export default function CreatorDashboard() {
         productUrl = assetUrlData.publicUrl;
       }
 
-      // 3. Insert into products table
+      // 3. Insert into products table with delivery_type included
       const { data: savedData, error: insertError } = await supabase
         .from('products')
         .insert([
@@ -78,7 +78,8 @@ export default function CreatorDashboard() {
             currency,
             cover_image: coverImageUrl,
             product_url: productUrl,
-            affiliate_split: affiliateSplit
+            affiliate_split: affiliateSplit,
+            delivery_type: 'download'
           }
         ])
         .select();
