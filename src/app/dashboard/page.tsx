@@ -13,23 +13,24 @@ export default function AdminDashboard() {
   const [productUrl, setProductUrl] = useState('');
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('KES');
-  const [handle, setHandle] = useState('crypto-baze');
+  const [handle, setHandle] = useState('lawi');
   const [commission, setCommission] = useState('10% - Standard Partner');
   const [description, setDescription] = useState('');
   const [publishing, setPublishing] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [createdProduct, setCreatedProduct] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
     setPublishing(true);
-    setSuccessMsg('');
+    setCreatedProduct(null);
 
     try {
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('products')
         .insert([
           {
-            handle,
+            handle: handle.trim().toLowerCase(),
             title,
             description,
             price: parseFloat(price),
@@ -38,11 +39,13 @@ export default function AdminDashboard() {
             product_url: deliveryType === 'link' ? productUrl : null,
             commission_split: commission,
           }
-        ]);
+        ])
+        .select()
+        .single();
 
       if (insertError) throw insertError;
       
-      setSuccessMsg('Product successfully published to your storefront!');
+      setCreatedProduct(data);
       setTitle('');
       setProductUrl('');
       setPrice('');
@@ -53,6 +56,14 @@ export default function AdminDashboard() {
       setPublishing(false);
     }
   };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const storeLink = createdProduct ? `https://arovaq.store/${createdProduct.handle}` : '';
 
   return (
     <main className="min-h-screen bg-[#0b0f19] text-slate-100 p-6 md:p-12 font-mono">
@@ -69,14 +80,64 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* SUCCESS MODAL / SHARE CARD */}
+        {createdProduct && (
+          <div className="bg-emerald-950/40 border border-emerald-600/60 rounded-xl p-6 md:p-8 space-y-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-xs uppercase bg-emerald-600 text-slate-950 font-bold px-2 py-1 rounded">
+                  Published Successfully
+                </span>
+                <h2 className="text-xl font-bold text-white mt-2">{createdProduct.title}</h2>
+              </div>
+              <button 
+                onClick={() => setCreatedProduct(null)}
+                className="text-slate-400 hover:text-white text-sm bg-slate-900 px-3 py-1 rounded border border-slate-800"
+              >
+                Create Another
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center bg-slate-950/80 p-6 rounded-lg border border-slate-800">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-slate-400 uppercase block mb-1">Custom Store Link</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      readOnly
+                      value={storeLink}
+                      className="w-full bg-slate-900 border border-slate-800 rounded p-2.5 text-emerald-400 text-xs outline-none"
+                    />
+                    <button 
+                      onClick={() => copyToClipboard(storeLink)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-4 rounded text-xs transition-colors"
+                    >
+                      {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-400 space-y-1">
+                  <p>• Price: <span className="text-white font-semibold">{createdProduct.currency} {createdProduct.price}</span></p>
+                  <p>• Affiliate Split: <span className="text-white font-semibold">{createdProduct.commission_split}</span></p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg w-fit mx-auto">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${storeLink}`} 
+                  alt="Product QR Code"
+                  className="w-36 h-36"
+                />
+                <span className="text-[10px] text-slate-900 font-bold mt-2 uppercase tracking-wider">Scan to Buy</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 md:p-8">
           <h2 className="text-xl font-semibold text-white mb-6">List Digital Product</h2>
-
-          {successMsg && (
-            <div className="mb-6 p-4 bg-emerald-950/40 border border-emerald-800 text-emerald-400 rounded-lg text-sm">
-              {successMsg}
-            </div>
-          )}
 
           <form onSubmit={handlePublish} className="space-y-6">
             <div>
