@@ -14,55 +14,54 @@ export default async function CreatorShelfPage({ params }: PageProps) {
   const resolvedParams = await params;
   const handle = resolvedParams.handle?.toLowerCase() || '';
 
-  // Fetch all products to inspect database contents
-  const { data: allProducts, error } = await supabase
+  // Fetch products for this handle
+  const { data: products, error } = await supabase
     .from('products')
-    .select('*');
+    .select('*')
+    .ilike('handle', handle);
 
-  const products = allProducts?.filter(p => p.handle?.toLowerCase() === handle) || [];
+  const formattedHandle = handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : '';
+
+  // Determine active badges based on profile or high-tier affiliate status (e.g., 40%-50% split tiers)
+  // These can later be driven dynamically by a creator/profile table in Supabase.
+  const badges = [
+    { label: 'GENESIS PIONEER', color: 'text-amber-400 bg-amber-950/60 border-amber-500/40 shadow-amber-950/40', pulse: true },
+    { label: 'ELITE AFFILIATE (50% TIER)', color: 'text-purple-400 bg-purple-950/60 border-purple-500/40 shadow-purple-950/40', pulse: false },
+    { label: 'VERIFIED CREATOR', color: 'text-emerald-400 bg-emerald-950/60 border-emerald-600/30 shadow-none', pulse: false },
+  ];
 
   return (
     <main className="min-h-screen bg-[#0b0f19] text-slate-100 p-6 md:p-12 font-mono">
       <div className="max-w-xl mx-auto space-y-8">
         
-        {/* CREATOR HEADER */}
-        <div className="space-y-2 border-b border-slate-800 pb-6">
-          <span className="text-[10px] tracking-widest text-emerald-400 uppercase font-semibold bg-emerald-950/60 border border-emerald-600/30 px-3 py-1 rounded-full">
-            VERIFIED CREATOR SHELF
-          </span>
-          <h1 className="text-3xl font-bold text-white pt-2">
-            {handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : ''}
+        {/* CREATOR HEADER WITH MULTI-TIER BADGES */}
+        <div className="space-y-3 border-b border-slate-800 pb-6">
+          <div className="flex flex-wrap items-center gap-2">
+            {badges.map((badge, idx) => (
+              <span 
+                key={idx} 
+                className={`text-[10px] tracking-widest uppercase font-semibold border px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg ${badge.color}`}
+              >
+                {badge.pulse && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>}
+                {badge.label}
+              </span>
+            ))}
+          </div>
+
+          <h1 className="text-3xl font-bold text-white pt-1">
+            {formattedHandle}
           </h1>
+
           <p className="text-xs text-slate-400">
-            URL Handle: &quot;{handle}&quot; | Total rows in DB: {allProducts?.length || 0}
+            @{handle} — Genesis partner, high-tier affiliate, and verified Web3 publisher on Arovaq.
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-950/50 border border-red-500/50 text-red-400 text-xs p-4 rounded-xl">
-            Database Error: {error.message}
-          </div>
-        )}
-
-        {/* DIAGNOSTIC PANEL */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-xs space-y-2 text-slate-300">
-          <p className="font-bold text-emerald-400">Database Diagnostic Inspector:</p>
-          {allProducts && allProducts.length > 0 ? (
-            allProducts.map((p, idx) => (
-              <div key={idx} className="border-t border-slate-800 pt-2 space-y-1">
-                <p>• Title: <span className="text-white font-bold">{p.title}</span></p>
-                <p>• Stored Handle: <span className="text-yellow-400 font-bold">&quot;{p.handle}&quot;</span></p>
-              </div>
-            ))
-          ) : (
-            <p className="text-red-400 font-bold">The `products` table returned 0 rows! The publishing form did not successfully write to Supabase.</p>
-          )}
-        </div>
-
         {/* PRODUCTS LIST */}
-        {products.length === 0 ? (
+        {error || !products || products.length === 0 ? (
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
-            <p className="text-sm text-slate-400">No products matched handle &quot;{handle}&quot;.</p>
+            <p className="text-sm text-slate-400">No digital assets listed on this shelf yet.</p>
+            <p className="text-xs text-slate-600">Publish your first asset via the Creator Publishing Hub.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -97,6 +96,7 @@ export default async function CreatorShelfPage({ params }: PageProps) {
                   </p>
                 </div>
 
+                {/* CHECKOUT SECTION */}
                 <div className="pt-4 border-t border-slate-800 space-y-4">
                   <a 
                     href={product.product_url} 
