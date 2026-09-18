@@ -30,7 +30,7 @@ export default function CreatorDashboard() {
       let coverImageUrl = '';
       let productUrl = '';
 
-      // 1. Bulletproof Cover Upload (Generates safe timestamp filename)
+      // 1. Bulletproof Cover Upload (Timestamp safe)
       if (coverFile) {
         const fileExt = coverFile.name.split('.').pop() || 'jpg';
         const fileName = `cover_${Date.now()}.${fileExt}`;
@@ -48,7 +48,7 @@ export default function CreatorDashboard() {
         coverImageUrl = publicUrlData.publicUrl;
       }
 
-      // 2. Bulletproof Asset Upload (Generates safe timestamp filename)
+      // 2. Bulletproof Asset Upload (Timestamp safe)
       if (assetFile) {
         const fileExt = assetFile.name.split('.').pop() || 'pdf';
         const assetName = `asset_${Date.now()}.${fileExt}`;
@@ -223,8 +223,10 @@ export default function CreatorDashboard() {
                 onChange={(e) => setAffiliateSplit(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
               >
+                <option value="2% - Micro Partner">2% - Micro Partner</option>
+                <option value="10% - Starter Partner">10% - Starter Partner</option>
+                <option value="20% - Standard Partner">20% - Standard Partner</option>
                 <option value="40% - Growth Partner">40% - Growth Partner</option>
-                <option value="25% - Standard Partner">25% - Standard Partner</option>
                 <option value="50% - Elite Partner">50% - Elite Partner</option>
               </select>
             </div>
