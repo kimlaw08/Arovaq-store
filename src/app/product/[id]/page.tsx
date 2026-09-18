@@ -13,7 +13,6 @@ interface PageProps {
 export default async function ProductCheckoutPage({ params }: PageProps) {
   const { id } = await params;
 
-  // Fetch the specific product from Supabase
   const { data: product, error } = await supabase
     .from('products')
     .select('*')
@@ -27,8 +26,7 @@ export default async function ProductCheckoutPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-[#0b0f19] text-slate-100 p-6 md:p-12 font-mono">
       <div className="max-w-xl mx-auto space-y-8 pt-8">
-        
-        {/* Navigation Breadcrumb */}
+
         <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-4">
           <Link href="/" className="hover:text-emerald-400 transition-colors">
             &larr; Back to Marketplace
@@ -36,15 +34,10 @@ export default async function ProductCheckoutPage({ params }: PageProps) {
           <span className="text-emerald-400 font-semibold uppercase tracking-wider">Secure Checkout</span>
         </div>
 
-        {/* Product Card */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:p-8 space-y-6 shadow-xl">
           {product.cover_image && (
             <div className="w-full aspect-[16/9] rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
-              <img 
-                src={product.cover_image} 
-                alt={product.title} 
-                className="w-full h-full object-cover"
-              />
+              <img src={product.cover_image} alt={product.title} className="w-full h-full object-cover" />
             </div>
           )}
 
@@ -67,7 +60,6 @@ export default async function ProductCheckoutPage({ params }: PageProps) {
             </p>
           </div>
 
-          {/* Secure Checkout Action */}
           <div className="pt-6 border-t border-slate-800 space-y-4">
             <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-xs text-slate-400 space-y-2">
               <span className="text-emerald-400 font-bold block uppercase tracking-wider">Instant Secure Delivery</span>
