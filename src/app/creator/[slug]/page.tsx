@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-// Safe fallbacks prevent build-time crashes when Vercel evaluates modules without env vars
+// Safe dummy fallbacks prevent build-time crashes when env vars are absent
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
