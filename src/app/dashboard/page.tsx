@@ -15,8 +15,11 @@ export default function CreatorStorefront() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  
+  // Checkout flow states
   const [buyerEmail, setBuyerEmail] = useState('');
-  const [unlocked, setUnlocked] = useState(false);
+  const [preferredCurrency, setPreferredCurrency] = useState('KES');
+  const [checkoutStep, setCheckoutStep] = useState<'email' | 'prelaunch_notice'>('email');
 
   useEffect(() => {
     async function fetchStoreProducts() {
@@ -38,12 +41,10 @@ export default function CreatorStorefront() {
     fetchStoreProducts();
   }, [handle]);
 
-  const handleCheckout = (e: React.FormEvent) => {
+  const handleProceedToPrelaunch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!buyerEmail) return;
-
-    // Save lead/buyer email to Supabase or trigger delivery
-    setUnlocked(true);
+    setCheckoutStep('prelaunch_notice');
   };
 
   return (
@@ -57,7 +58,7 @@ export default function CreatorStorefront() {
             <h1 className="text-3xl font-bold text-white mt-1">@{handle}</h1>
           </div>
           <span className="bg-emerald-950 text-emerald-400 border border-emerald-600/50 text-xs px-3 py-1.5 rounded-full font-semibold">
-            Verified Creator Shelf
+            Pre-Launch Mode Active
           </span>
         </div>
 
@@ -85,7 +86,7 @@ export default function CreatorStorefront() {
                 <div className="md:col-span-2 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
                     <span className="text-[10px] uppercase bg-slate-800 text-emerald-400 font-bold px-2 py-0.5 rounded">
-                      Digital Asset
+                      Digital Asset // Pre-Launch
                     </span>
                     <h2 className="text-xl font-bold text-white">{product.title}</h2>
                     <p className="text-sm text-slate-400 leading-relaxed">{product.description}</p>
@@ -93,15 +94,15 @@ export default function CreatorStorefront() {
 
                   <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800">
                     <div>
-                      <span className="text-xs text-slate-400 block">Price</span>
+                      <span className="text-xs text-slate-400 block">Base Price</span>
                       <span className="text-lg font-bold text-emerald-400">{product.currency} {product.price}</span>
                     </div>
 
                     <button 
-                      onClick={() => setSelectedProduct(product)}
+                      onClick={() => { setSelectedProduct(product); setCheckoutStep('email'); }}
                       className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-sm transition-colors cursor-pointer"
                     >
-                      Buy / Access Asset
+                      Reserve / Buy Asset
                     </button>
                   </div>
                 </div>
@@ -111,27 +112,42 @@ export default function CreatorStorefront() {
           </div>
         )}
 
-        {/* CHECKOUT MODAL WITH EMAIL-FIRST GATE */}
+        {/* PRE-LAUNCH CHECKOUT MODAL */}
         {selectedProduct && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 md:p-8 space-y-6 relative">
               <button 
-                onClick={() => { setSelectedProduct(null); setUnlocked(false); setBuyerEmail(''); }}
+                onClick={() => { setSelectedProduct(null); setCheckoutStep('email'); setBuyerEmail(''); }}
                 className="absolute top-4 right-4 text-slate-400 hover:text-white text-sm bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center"
               >
                 ✕
               </button>
 
               <div>
-                <p className="text-xs text-emerald-400 uppercase tracking-wider font-semibold">Secure Checkout</p>
-                <h3 className="text-xl font-bold text-white mt-1">{selectedProduct.title}</h3>
-                <p className="text-sm text-slate-400 mt-1">{selectedProduct.currency} {selectedProduct.price}</p>
+                <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded font-bold uppercase">
+                  Pre-Launch Access
+                </span>
+                <h3 className="text-xl font-bold text-white mt-2">{selectedProduct.title}</h3>
+                <p className="text-sm text-slate-400 mt-1">Listing Price: {selectedProduct.currency} {selectedProduct.price}</p>
               </div>
 
-              {!unlocked ? (
-                <form onSubmit={handleCheckout} className="space-y-4">
+              {checkoutStep === 'email' ? (
+                <form onSubmit={handleProceedToPrelaunch} className="space-y-4">
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Enter Your Email to Unlock</label>
+                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Preferred Currency</label>
+                    <select 
+                      value={preferredCurrency}
+                      onChange={(e) => setPreferredCurrency(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none mb-3"
+                    >
+                      <option value="KES">KES (Kenyan Shilling - M-Pesa)</option>
+                      <option value="USD">USD (US Dollar - Global)</option>
+                      <option value="NGN">NGN (Nigerian Naira - Busha)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Enter Your Email for Access</label>
                     <input 
                       type="email" 
                       required
@@ -141,25 +157,34 @@ export default function CreatorStorefront() {
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
                     />
                   </div>
+
                   <button 
                     type="submit"
                     className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-3 rounded-lg text-sm transition-colors cursor-pointer"
                   >
-                    Continue to Payment & Download
+                    Continue to Pre-Launch Checkout
                   </button>
                 </form>
               ) : (
-                <div className="space-y-4 bg-emerald-950/30 border border-emerald-600/40 p-4 rounded-lg text-center">
-                  <p className="text-xs text-emerald-400 font-semibold uppercase">Email Verified & Captured!</p>
-                  <p className="text-sm text-slate-300">Your download link is ready:</p>
-                  <a 
-                    href={selectedProduct.product_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-sm transition-colors"
+                <div className="space-y-4 bg-slate-950/80 border border-slate-800 p-5 rounded-lg text-left">
+                  <div className="border-b border-slate-800 pb-3">
+                    <p className="text-xs text-emerald-400 uppercase font-bold">Order Reserved Successfully</p>
+                    <p className="text-xs text-slate-400 mt-1">Email: <span className="text-white">{buyerEmail}</span></p>
+                    <p className="text-xs text-slate-400">Currency Selected: <span className="text-white">{preferredCurrency}</span></p>
+                  </div>
+
+                  <div className="space-y-2 text-xs text-slate-300 leading-relaxed">
+                    <p className="font-bold text-white">Notice: Arovaq Storefront is currently in Pre-Launch Mode.</p>
+                    <p>Payment processing gateways (including M-Pesa mobile money and Busha integration rails) are finalizing live hooks.</p>
+                    <p className="text-emerald-400 font-semibold">Your copy has been reserved. You will receive an email notification with direct access instructions as soon as the live payment rails go live.</p>
+                  </div>
+
+                  <button 
+                    onClick={() => { setSelectedProduct(null); setCheckoutStep('email'); setBuyerEmail(''); }}
+                    className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs transition-colors"
                   >
-                    Download Digital Asset
-                  </a>
+                    Close & Return to Store
+                  </button>
                 </div>
               )}
 
