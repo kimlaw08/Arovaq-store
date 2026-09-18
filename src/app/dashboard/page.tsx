@@ -8,14 +8,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function AdminDashboard() {
-  const [isExpanded, setIsExpanded] = useState(true);
   const [title, setTitle] = useState('');
   const [deliveryType, setDeliveryType] = useState<'link' | 'upload'>('link');
   const [productUrl, setProductUrl] = useState('');
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('KES');
-  const [handle, setHandle] = useState('lawi');
-  const [commission, setCommission] = useState('40%');
+  const [handle, setHandle] = useState('crypto-baze');
+  const [commission, setCommission] = useState('10% - Standard Partner');
   const [description, setDescription] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -43,7 +42,7 @@ export default function AdminDashboard() {
 
       if (insertError) throw insertError;
       
-      setSuccessMsg('Product successfully published to your store front!');
+      setSuccessMsg('Product successfully published to your storefront!');
       setTitle('');
       setProductUrl('');
       setPrice('');
@@ -61,7 +60,7 @@ export default function AdminDashboard() {
         
         <div className="border-b border-slate-800 pb-6 flex justify-between items-center">
           <div>
-            <p className="text-xs tracking-widest text-emerald-400 uppercase font-semibold">Arovaq // Control Panel</p>
+            <p className="text-xs tracking-widest text-emerald-400 uppercase font-semibold">AROVAQ // v1.0</p>
             <h1 className="text-2xl font-bold text-white mt-1">Creator Publishing Hub</h1>
           </div>
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
@@ -87,7 +86,7 @@ export default function AdminDashboard() {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Future Express Masterclass" 
+                placeholder="e.g. Advanced Solana Smart Contract Guide" 
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
               />
             </div>
@@ -99,34 +98,34 @@ export default function AdminDashboard() {
                   <button 
                     type="button" 
                     onClick={() => setDeliveryType('link')}
-                    className={`px-3 py-1 rounded ${deliveryType === 'link' ? 'bg-emerald-600 text-white font-semibold' : 'bg-slate-800 text-slate-400'}`}
+                    className={`px-3 py-1 rounded transition-colors ${deliveryType === 'link' ? 'bg-emerald-600 text-white font-semibold' : 'bg-slate-800 text-slate-400'}`}
                   >
-                    Paste Link
+                    Custom Link
                   </button>
                   <button 
                     type="button" 
                     onClick={() => setDeliveryType('upload')}
-                    className={`px-3 py-1 rounded ${deliveryType === 'upload' ? 'bg-emerald-600 text-white font-semibold' : 'bg-slate-800 text-slate-400'}`}
+                    className={`px-3 py-1 rounded transition-colors ${deliveryType === 'upload' ? 'bg-emerald-600 text-white font-semibold' : 'bg-slate-800 text-slate-400'}`}
                   >
-                    Upload File
+                    Direct Upload
                   </button>
                 </div>
               </div>
 
               {deliveryType === 'link' ? (
                 <input 
-                  type="url" 
+                  type="text" 
                   required
                   value={productUrl}
                   onChange={(e) => setProductUrl(e.target.value)}
-                  placeholder="https://drive.google.com/... or download link" 
+                  placeholder="solana-guide-vol1 or full URL" 
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
                 />
               ) : (
                 <input 
                   type="file" 
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 text-sm cursor-pointer"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 text-sm cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white"
                 />
               )}
             </div>
@@ -139,15 +138,16 @@ export default function AdminDashboard() {
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
                 >
-                  <option value="KES">KES - Kenya Shillings</option>
-                  <option value="NGN">NGN - Nigerian Naira</option>
-                  <option value="USD">USD - US Dollars</option>
+                  <option value="KES">KES (Kenyan Shilling)</option>
+                  <option value="NGN">NGN (Nigerian Naira)</option>
+                  <option value="USD">USD (US Dollar)</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Price Amount</label>
                 <input 
                   type="number" 
+                  step="0.01"
                   required
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
             </div>
 
             <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Creator Handle</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Creator ID / Handle</label>
               <input 
                 type="text" 
                 value={handle}
@@ -174,9 +174,9 @@ export default function AdminDashboard() {
                 onChange={(e) => setCommission(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
               >
-                <option value="40%">40% - Pro Promoter</option>
-                <option value="30%">30% - Standard Split</option>
-                <option value="20%">20% - Base Tier</option>
+                <option value="10% - Standard Partner">10% - Standard Partner</option>
+                <option value="20% - Pro Partner">20% - Pro Partner</option>
+                <option value="30% - Elite Partner">30% - Elite Partner</option>
               </select>
             </div>
 
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your digital asset..."
+                placeholder="Describe what buyers will learn or receive..."
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
               ></textarea>
             </div>
