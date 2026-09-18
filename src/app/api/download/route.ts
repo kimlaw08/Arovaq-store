@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
-    const body = await request.json();
+    const { searchParams } = new URL(request.url);
+    const fileId = searchParams.get('id');
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,14 +22,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Product uploaded successfully',
-      data: body 
+      message: 'Download ready',
+      fileId 
     });
 
   } catch (err: any) {
-    console.error('Upload error:', err);
+    console.error('Download error:', err);
     return NextResponse.json(
-      { error: err.message || 'Internal server error during upload' },
+      { error: err.message || 'Internal server error during download' },
       { status: 500 }
     );
   }
