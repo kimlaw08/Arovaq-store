@@ -14,7 +14,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing product ID or buyer reference' }, { status: 400 });
     }
 
-    // Insert the verified purchase record into Supabase
     const { error } = await supabase
       .from('purchases')
       .insert([{ product_id: productId, buyer_ref: buyerRef }]);
