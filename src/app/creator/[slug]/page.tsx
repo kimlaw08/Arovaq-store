@@ -3,11 +3,12 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-// Safe dummy fallbacks prevent build-time crashes when env vars are absent
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Lazy getter function: prevents createClient from running during build-time evaluation
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 interface CreatorPageProps {
   params: {
@@ -18,10 +19,13 @@ interface CreatorPageProps {
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { slug } = params;
 
-  // Runtime check for real credentials
+  // Runtime environment check
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     notFound();
   }
+
+  // Initialized safely at runtime
+  const supabase = getSupabaseClient();
 
   // Fetch the creator profile based on the slug/handle
   const { data: creator, error } = await supabase
