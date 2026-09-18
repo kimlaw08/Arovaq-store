@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const body = await request.json();
 
-    // Add your upload logic here
+    // Add your product upload logic here
     return NextResponse.json({ success: true, message: 'Upload route active' });
 
   } catch (err: any) {
