@@ -18,11 +18,12 @@ export async function GET(request: Request) {
       );
     }
 
+    // Initialized safely INSIDE the runtime function handler
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Download ready',
+      message: 'Download route ready',
       fileId 
     });
 
