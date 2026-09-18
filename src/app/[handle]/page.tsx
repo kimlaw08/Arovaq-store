@@ -5,13 +5,14 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface PageProps {
-  params: {
+  params: Promise<{
     handle: string;
-  };
+  }>;
 }
 
 export default async function CreatorShelfPage({ params }: PageProps) {
-  const { handle } = params;
+  const resolvedParams = await params;
+  const handle = resolvedParams.handle;
 
   // Case-insensitive query to fetch products for this creator handle
   const { data: products, error } = await supabase
@@ -19,7 +20,7 @@ export default async function CreatorShelfPage({ params }: PageProps) {
     .select('*')
     .ilike('handle', handle);
 
-  const formattedHandle = handle.charAt(0).toUpperCase() + handle.slice(1);
+  const formattedHandle = handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : '';
 
   return (
     <main className="min-h-screen bg-[#0b0f19] text-slate-100 p-6 md:p-12 font-mono">
