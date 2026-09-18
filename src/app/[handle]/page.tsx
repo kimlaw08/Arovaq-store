@@ -12,13 +12,13 @@ interface PageProps {
 
 export default async function CreatorShelfPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const handle = resolvedParams.handle;
+  const handle = resolvedParams.handle?.toLowerCase() || '';
 
-  // Case-insensitive query to fetch products for this creator handle
+  // Fetch products for this handle
   const { data: products, error } = await supabase
     .from('products')
     .select('*')
-    .ilike('handle', handle);
+    .eq('handle', handle);
 
   const formattedHandle = handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : '';
 
@@ -39,11 +39,19 @@ export default async function CreatorShelfPage({ params }: PageProps) {
           </p>
         </div>
 
+        {/* DEBUG ERROR BOX */}
+        {error && (
+          <div className="bg-red-950/50 border border-red-500/50 text-red-400 text-xs p-4 rounded-xl space-y-1">
+            <p className="font-bold">Supabase Query Error:</p>
+            <p>{error.message}</p>
+          </div>
+        )}
+
         {/* PRODUCTS LIST */}
-        {error || !products || products.length === 0 ? (
+        {!products || products.length === 0 ? (
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
             <p className="text-sm text-slate-400">No digital assets listed on this shelf yet.</p>
-            <p className="text-xs text-slate-600">Check back soon or verify your creator handle.</p>
+            <p className="text-xs text-slate-600">Queried handle in database: &quot;{handle}&quot;</p>
           </div>
         ) : (
           <div className="space-y-6">
