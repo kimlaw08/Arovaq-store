@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [title, setTitle] = useState('');
   const [deliveryType, setDeliveryType] = useState<'link' | 'upload'>('link');
   const [productUrl, setProductUrl] = useState('');
+  const [coverImage, setCoverImage] = useState('');
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('KES');
   const [handle, setHandle] = useState('lawi');
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
             currency,
             delivery_type: deliveryType,
             product_url: deliveryType === 'link' ? productUrl : null,
+            cover_image: coverImage || 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=600&auto=format&fit=crop',
             commission_split: commission,
           }
         ])
@@ -48,6 +50,7 @@ export default function AdminDashboard() {
       setCreatedProduct(data);
       setTitle('');
       setProductUrl('');
+      setCoverImage('');
       setPrice('');
       setDescription('');
     } catch (err: any) {
@@ -153,6 +156,17 @@ export default function AdminDashboard() {
             </div>
 
             <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">Cover Image URL (Optional)</label>
+              <input 
+                type="text" 
+                value={coverImage}
+                onChange={(e) => setCoverImage(e.target.value)}
+                placeholder="https://images.unsplash.com/... or leave blank for default Web3 art" 
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
+              />
+            </div>
+
+            <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs uppercase tracking-wider text-slate-400">Product Asset Delivery</label>
                 <div className="flex gap-2 text-xs">
@@ -235,9 +249,11 @@ export default function AdminDashboard() {
                 onChange={(e) => setCommission(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-emerald-500 outline-none"
               >
+                <option value="2% - Starter Partner">2% - Starter Partner</option>
                 <option value="10% - Standard Partner">10% - Standard Partner</option>
                 <option value="20% - Pro Partner">20% - Pro Partner</option>
-                <option value="30% - Elite Partner">30% - Elite Partner</option>
+                <option value="40% - Growth Partner">40% - Growth Partner</option>
+                <option value="50% - Master Partner">50% - Master Partner</option>
               </select>
             </div>
 
