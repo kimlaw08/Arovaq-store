@@ -30,10 +30,11 @@ export default function CreatorDashboard() {
       let coverImageUrl = '';
       let productUrl = '';
 
-      // 1. Upload Cover Image with sanitized filename
+      // 1. Bulletproof Cover Upload (Generates safe timestamp filename)
       if (coverFile) {
-        const cleanName = coverFile.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-        const fileName = `cover_${Date.now()}_${cleanName}`;
+        const fileExt = coverFile.name.split('.').pop() || 'jpg';
+        const fileName = `cover_${Date.now()}.${fileExt}`;
+        
         const { error: coverError } = await supabase.storage
           .from('products')
           .upload(fileName, coverFile);
@@ -47,10 +48,11 @@ export default function CreatorDashboard() {
         coverImageUrl = publicUrlData.publicUrl;
       }
 
-      // 2. Upload Digital Asset File with sanitized filename
+      // 2. Bulletproof Asset Upload (Generates safe timestamp filename)
       if (assetFile) {
-        const cleanAssetName = assetFile.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-        const assetName = `asset_${Date.now()}_${cleanAssetName}`;
+        const fileExt = assetFile.name.split('.').pop() || 'pdf';
+        const assetName = `asset_${Date.now()}.${fileExt}`;
+
         const { error: assetError } = await supabase.storage
           .from('products')
           .upload(assetName, assetFile);
