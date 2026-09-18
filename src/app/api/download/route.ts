@@ -5,32 +5,26 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const fileId = searchParams.get('id');
-
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { error: 'Missing Supabase environment variables' },
+        { error: 'Missing environment variables' }, 
         { status: 500 }
       );
     }
 
-    // Initialized safely INSIDE the runtime function handler
+    // Initialized strictly at runtime inside the function handler
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Download route ready',
-      fileId 
-    });
+    // Add your download verification/logic here
+    return NextResponse.json({ success: true, message: 'Download route active' });
 
   } catch (err: any) {
     console.error('Download error:', err);
     return NextResponse.json(
-      { error: err.message || 'Internal server error during download' },
+      { error: err.message || 'Internal server error' }, 
       { status: 500 }
     );
   }
