@@ -3,13 +3,6 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-// Lazy getter function: prevents createClient from running during build-time evaluation
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-  return createClient(supabaseUrl, supabaseKey);
-}
-
 interface CreatorPageProps {
   params: {
     slug: string;
@@ -19,13 +12,16 @@ interface CreatorPageProps {
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { slug } = params;
 
-  // Runtime environment check
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  // Retrieve environment variables safely inside runtime execution
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
     notFound();
   }
 
-  // Initialized safely at runtime
-  const supabase = getSupabaseClient();
+  // Initialized strictly at runtime - never during build evaluation
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   // Fetch the creator profile based on the slug/handle
   const { data: creator, error } = await supabase
