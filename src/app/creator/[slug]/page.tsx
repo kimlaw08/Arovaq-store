@@ -3,6 +3,12 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
+// Safe fallbacks prevent build-time crashes when Vercel evaluates modules without env vars
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 interface CreatorPageProps {
   params: {
     slug: string;
@@ -12,15 +18,10 @@ interface CreatorPageProps {
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { slug } = params;
 
-  // Initialize Supabase client INSIDE the component function at runtime
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
+  // Runtime check for real credentials
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     notFound();
   }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
 
   // Fetch the creator profile based on the slug/handle
   const { data: creator, error } = await supabase
