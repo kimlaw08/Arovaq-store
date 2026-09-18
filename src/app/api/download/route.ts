@@ -3,29 +3,36 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
+// Lazy getter function: ensures createClient is NEVER called during build time
+function getSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  return createClient(supabaseUrl, supabaseKey);
+}
+
 export async function GET(request: Request) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabase = getSupabase();
 
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json(
-        { error: 'Missing environment variables' }, 
-        { status: 500 }
-      );
+    const { searchParams } = new URL(request.url);
+    const orderId = searchParams.get('orderId');
+
+    if (!orderId) {
+      return NextResponse.json({ error: 'Missing order ID' }, { status: 400 });
     }
 
-    // Initialized strictly at runtime inside the function handler
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
 
-    // Add your download verification/logic here
-    return NextResponse.json({ success: true, message: 'Download route active' });
+    if (error || !order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
 
+    return NextResponse.json({ success: true, order });
   } catch (err: any) {
-    console.error('Download error:', err);
-    return NextResponse.json(
-      { error: err.message || 'Internal server error' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }
 }
